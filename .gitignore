@@ -1,0 +1,12 @@
+Scope.docx
+note.md
+requirements.txt
+main.py
+data
+mysql_db
+build_model
+constant/config.py
+extract/extract_stock_data.py
+extract/extract_us_econ_data.py
+load/load_backup.py
+transform/transform_backup.py
