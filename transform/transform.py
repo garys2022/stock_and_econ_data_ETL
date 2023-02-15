@@ -98,7 +98,7 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
         stock_data[f'is_{data}_release_date'] = stock_data[f'{data}_release_date'].apply(
             lambda x: 0 if pd.isnull([x]) else 1)
 
-        stock_data.sort_values(by=["date"],ascending=False,inplace=True)
+        stock_data.sort_values(by=["date"],ascending=True,inplace=True)
 
         stock_data[f'{data}_actual'].fillna(method='ffill',inplace=True)
         stock_data[f'{data}_forecast'].fillna(method='ffill',inplace=True)
