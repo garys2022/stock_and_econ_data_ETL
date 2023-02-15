@@ -87,7 +87,9 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
         econ_data= econ_datas_silver[data].loc[:,econ_datas_silver[data].columns.isin(econ_col_list)]
         econ_data.columns = f"{data}_"+ econ_data.columns.to_series()
         econ_data.loc[:,f'{data}_silver_id']=econ_datas_silver[data]['id']
-        stock_data = stock_data.merge(econ_data,how="left",left_on="date",right_on=f"{data}_release_date",
+
+        #using outer join to ensure future econ_data release date data is intact for fill na process
+        stock_data = stock_data.merge(econ_data,how="outer",left_on="date",right_on=f"{data}_release_date",
                                       validate='one_to_one')
         stock_data[f'is_{data}_release_date'] = stock_data[f'{data}_release_date'].apply(
             lambda x: 0 if pd.isnull([x]) else 1)
@@ -109,6 +111,11 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
     for period in stock_percentage_change:
         stock_data[f'change_after_{period}_day']= (stock_data['open'].shift(-1*period)/stock_data['open'])-1
 
+
+    #drop rows where open is null (future econ data)
+    stock_data.dropna(axis=0,subset=['open'])
+
+    #replace np.nan with None for insert  to SQL server
     stock_data.replace([np.nan],[None],inplace=True)
     return stock_data
 
