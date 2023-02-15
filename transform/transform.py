@@ -86,11 +86,15 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
     for data in econ_datas.category.keys():
         econ_data= econ_datas_silver[data].loc[:,econ_datas_silver[data].columns.isin(econ_col_list)]
         econ_data.columns = f"{data}_"+ econ_data.columns.to_series()
-        econ_data.loc[:,f'{data}_silver_id']=econ_datas_silver[data]['id']
+        econ_data.loc[:,f'{data}_silver_id']=econ_datas_silver[data].loc[:,'id']
 
         #using outer join to ensure future econ_data release date data is intact for fill na process
+        print('before merge',stock_data['date'].isna().sum())
         stock_data = stock_data.merge(econ_data,how="outer",left_on="date",right_on=f"{data}_release_date",
-                                      validate='one_to_one')
+                                      validate=None)
+
+        stock_data['date'].fillna(stock_data[f'{data}_release_date'],inplace=True)
+
         stock_data[f'is_{data}_release_date'] = stock_data[f'{data}_release_date'].apply(
             lambda x: 0 if pd.isnull([x]) else 1)
 
@@ -102,6 +106,7 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
         stock_data[f'{data}_next_release_date'] = stock_data[f'{data}_release_date'].fillna(method='bfill')
         stock_data[f'{data}_day_to_next_release'] = stock_data[f'{data}_next_release_date'] - stock_data['date']
         stock_data[f'{data}_day_to_next_release'] = stock_data[f'{data}_day_to_next_release'].dt.days
+
         stock_data.drop(f'{data}_release_date',axis=1,inplace=True)
 
     # adding features
@@ -112,8 +117,8 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
         stock_data[f'change_after_{period}_day']= (stock_data['open'].shift(-1*period)/stock_data['open'])-1
 
 
-    #drop rows where open is null (future econ data)
-    stock_data.dropna(axis=0,subset=['open'])
+    #drop rows where open is null (rows without stock data)
+    stock_data.dropna(axis=0,subset=['open'],inplace=True)
 
     #replace np.nan with None for insert  to SQL server
     stock_data.replace([np.nan],[None],inplace=True)
