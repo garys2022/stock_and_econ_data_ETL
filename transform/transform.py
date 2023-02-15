@@ -91,15 +91,14 @@ def silver_to_gold_merge_and_clean(stock_data_silver,econ_datas_silver):
         #using outer join to ensure future econ_data release date data is intact for fill na process
         print('before merge',stock_data['date'].isna().sum())
         stock_data = stock_data.merge(econ_data,how="outer",left_on="date",right_on=f"{data}_release_date",
-                                      validate='one_to_one')
+                                      validate=None)
 
         stock_data['date'].fillna(stock_data[f'{data}_release_date'],inplace=True)
 
         stock_data[f'is_{data}_release_date'] = stock_data[f'{data}_release_date'].apply(
             lambda x: 0 if pd.isnull([x]) else 1)
 
-        # sort rows according to date for forward/backward filling na
-        stack_data.sort_values(by=['date'],inplace=True)
+        stock_data.sort_values(by=["date"],inplace=True)
 
         stock_data[f'{data}_actual'].fillna(method='ffill',inplace=True)
         stock_data[f'{data}_forecast'].fillna(method='ffill',inplace=True)
