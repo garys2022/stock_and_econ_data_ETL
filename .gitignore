@@ -10,3 +10,4 @@ extract/extract_stock_data.py
 extract/extract_us_econ_data.py
 load/load_backup.py
 transform/transform_backup.py
+env

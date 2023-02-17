@@ -1,3 +1,5 @@
+import datetime
+
 from sqlalchemy import create_engine,text, select,and_
 import sqlalchemy as sa
 import pandas as pd
@@ -23,7 +25,8 @@ def load_raw_stock_to_db_sqlorm(raw_stock_data,
         engine = create_engine(db_login['root'], pool_recycle=3600)
 
     #change type for date from np.datetime64ns to datetime.date to input to db
-    raw_stock_data.loc[:,"Date"]= raw_stock_data.loc[:,"Date"].dt.date
+    if type(raw_stock_data.Date[0]) != datetime.date:
+        raw_stock_data.loc[:,"Date"]= raw_stock_data.loc[:,"Date"].dt.date
     raw_stock_data = raw_stock_data.replace(np.nan, None)
     with Session(engine) as session:
         try:
